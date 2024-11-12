@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추출된 키워드</title>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-tag-cloud.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.1.1/d3.min.js"></script> <!-- d3.js 추가 -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .description {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.4;
+        }
+        .chart-area {
+            width: 90%;
+            max-width: 800px;
+            height: 450px;
+            margin: 20px auto;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        #container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>추출된 키워드</h1>
+    <div class="description">
+        아래는 분석을 통해 추출된 주요 키워드입니다. <br>
+        각 키워드를 클릭하면 해당 키워드와 관련된 논문을 검색합니다.
+    </div>
+    <div class="chart-area">
+        <div id="container"></div>
+    </div>
+
+    <script>
+        console.log("AnyChart is initializing...");
+        anychart.onDocumentReady(function () {
+            console.log("Document is ready, creating chart...");
+            var data = [
+                {% for keyword, score in keyword_scores.items() %}
+                { x: "{{ keyword | e}}", value: {{ score }} }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];  
+
+            var chart = anychart.tagCloud(data);
+            chart.angles([0, -45, 90]); // 여러 각도로 키워드 표시
+            chart.colorRange(true); // 색상 범위 활성화
+            chart.colorRange().length(5); // 색상 범위 길이 설정
+            chart.container("container"); // 차트를 그릴 컨테이너 설정
+
+            // 키워드 클릭 이벤트 추가
+            chart.listen("pointClick", function(e) {
+                var clickedKeyword = e.point.get("x");
+                console.log("Clicked keyword: " + clickedKeyword);
+                window.location.href = "{{ url_for('crawl') }}?keyword=" + encodeURIComponent(clickedKeyword);
+            });
+
+            chart.draw(); // 차트 그리기
+        });
+    </script>
+</body>
+</html>
